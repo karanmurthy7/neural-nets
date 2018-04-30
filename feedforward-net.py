@@ -1,5 +1,5 @@
 import torch
-from torch import autograd, nn
+from torch import autograd, nn, optim
 import torch.nn.functional as F
 from torch.backends.cudnn.rnn import _hidden_size
 
@@ -8,6 +8,7 @@ batch_size = 5
 input_size = 3
 hidden_size = 8
 num_classes = 4
+learning_rate = 0.001
 
 torch.manual_seed(123)
 input = autograd.Variable(torch.rand(batch_size, input_size))
@@ -27,10 +28,21 @@ class Net(nn.Module):
         x = F.softmax(x)
         return x
     
+    
+    
 model = Net(input_size=input_size, hidden_size=hidden_size, num_classes=num_classes)
-output = model(input)
-print('out', output)
-_, pred = output.max(1)
+opt = optim.Adam(params= model.parameters(), lr = learning_rate)
 
-print('target : ', target.view(1, -1))
-print('pred : ', pred.view(1, -1))
+for epoch in range(1000):
+    output = model(input)
+    _, pred = output.max(1)
+    
+    print('target : ', target.view(1, -1))
+    print('pred : ', pred.view(1, -1))
+    
+    loss = F.nll_loss(output, target=target)
+    print('loss : ', loss)
+    
+    model.zero_grad()
+    loss.backward()
+    opt.step()
